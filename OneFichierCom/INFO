@@ -4,7 +4,7 @@
 "displayname": "1fichier", 
 "version": "2.7", 
 "authentication": "yes", 
-"module": "OneFichierCom.php", 
+"module": "OneFichierComV2.7.php", 
 "class": "SynoFileHosting", 
 "description": "Free or premium account" 
 } 
