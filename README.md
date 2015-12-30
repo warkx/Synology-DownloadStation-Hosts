@@ -17,7 +17,8 @@ Récupérez le fichier host dans la partie **Lien** ou alors créé le avec la p
 # Creation du fichier host
 Sous Windows
 
-1. Récuperez le fichier **CreateHost.vbs** et le dossier de votre choix
+1. Installez **7zip** sur votre PC dans le dossier **C:\Program Files\**
+2. Récuperez le fichier **CreateHost.vbs** et le dossier de votre choix
 2. Glissez tous les fichiers du dossier sur le script CreateHost.vbs
 3. Entrez un nom pour le fichier host et valider
 4. Le fichier host est créé sur le bureau
