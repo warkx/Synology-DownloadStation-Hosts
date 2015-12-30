@@ -1,5 +1,8 @@
-'Author : warkx
-'Date : 28/04/2015
+' Auteur : warkx
+' Version originale Developpé le : 28/04/2015
+' Version : 1.0
+' Description : Créé un fichier Host
+ 
 
 Set oArgs = WScript.Arguments 
 Set oShell = CreateObject("WScript.Shell")
