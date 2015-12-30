@@ -33,3 +33,6 @@ Sous linux
 - http://www.nas-forum.com/forum/topic/37274-fichier-host-1fichier-host-file-1fichier/
 - http://www.nas-forum.com/forum/topic/44084-fichier-host-uptobox-host-file-uptobox/
 - http://www.nas-forum.com/forum/topic/47023-fichier-host-uplea-host-file-uplea/
+
+# Documentation
+- http://global.download.synology.com/download/Document/DeveloperGuide/Developer_Guide_to_File_Hosting_Module.pdf
