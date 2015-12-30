@@ -4,7 +4,7 @@
 	"displayname": "Uplea",
 	"version": "1.5.1",
 	"authentication": "yes",
-	"module": "UpleaComV1.5.1.php",
+	"module": "UpleaCom.php",
 	"class": "SynoFileHosting",
 	"description": "Free or premium account"
 }

@@ -4,7 +4,7 @@
 	"displayname": "Uptobox",
 	"version": "1.0.3",
 	"authentication": "yes",
-	"module": "UptoboxComV1.0.3.php",
+	"module": "UptoboxCom.php",
 	"class": "SynoFileHosting",
 	"description": "Free or premium account"
 }
