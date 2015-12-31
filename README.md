@@ -5,7 +5,7 @@ Fichiers hosts pour ajouter des herbergeurs sur Download Station
 - Fonctionne avec les comptes gratuit et premium
 
 # Installation du fichier host
-Récupérez le fichier host dans la partie **Lien** ou alors créé le avec la procédure disponible plus bas.
+Récupérez le fichier host dans la partie **Lien** ou alors créez le avec la procédure disponible plus bas.
 
 1. Connectez vous sur votre NAS Synology
 2. Ouvrez Download Station
