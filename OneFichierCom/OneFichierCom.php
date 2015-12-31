@@ -2,8 +2,8 @@
 
 /*Auteur : warkx
   Version originale Developpé le : 23/11/2013
-  Version : 2.7
-  Développé le : 27/12/2015
+  Version : 2.7.1
+  Développé le : 31/12/2015
   Description : Support du compte gratuit et premium*/
   
 class SynoFileHosting
@@ -42,8 +42,7 @@ class SynoFileHosting
         $ret = false;
         
         //verifie le type de compte
-        $VerifyRet = $this->Verify(false);
-        $this->ACCOUNT_TYPE = $VerifyRet;
+        $this->ACCOUNT_TYPE = $this->Verify(false);
         
         //Recupere l'id, s'il nest pas bon, renvoie NON PRIS EN CHARGE
         $GetFILEIDRet = $this->GetFILEID($this->Url);
@@ -53,7 +52,7 @@ class SynoFileHosting
         }else
         {
             //Créé l'url en fonction du type de compte
-            $this->MakeUrl($VerifyRet);
+            $this->MakeUrl();
             
             /*verifie si le lien est valide, si c'est le cas 
             le nom du fichier est récupéré, sinon c'est false 
@@ -67,7 +66,7 @@ class SynoFileHosting
             }else
             {
                 //en fonction du type de compte, lance la fonction correspondante
-                if(USER_IS_PREMIUM == $VerifyRet)
+                if($this->ACCOUNT_TYPE == USER_IS_PREMIUM)
                 {
                     $ret = $this->DownloadPremium();
                 }else
@@ -138,6 +137,7 @@ class SynoFileHosting
     {
         $DownloadInfo = false;
         $page = false;
+        
         if($this->ACCOUNT_TYPE != LOGIN_FAIL)
         {
             $page = $this->DownloadPageWithAuth();
@@ -163,20 +163,21 @@ class SynoFileHosting
                 précédente n'indiquait pas qu'il fallait attendre
                 */
                 $page = false;
+                $URLFinded = false;
+                
                 $page = $this->UrlFileFree($this->Url);
+                
                 if($page != false)
                 {
                     preg_match($this->FREE_REAL_URL_REGEX, $page, $realUrl);
                     if(!empty($realUrl[1]))
                     {
                         $DownloadInfo[DOWNLOAD_URL] = $realUrl[1];
+                        $URLFinded = true;
                     }
-                    else
-                    {
-                        $DownloadInfo[DOWNLOAD_COUNT] = $this->WAITING_TIME_DEFAULT;
-                        $DownloadInfo[DOWNLOAD_ISQUERYAGAIN] = $this->QUERYAGAIN;
-                    }
-                }else
+                }
+                
+                if($URLFinded == false)
                 {
                     $DownloadInfo[DOWNLOAD_COUNT] = $this->WAITING_TIME_DEFAULT;
                     $DownloadInfo[DOWNLOAD_ISQUERYAGAIN] = $this->QUERYAGAIN;
@@ -220,19 +221,19 @@ class SynoFileHosting
     {
         $ret = false;
         
-        $URL_AUTH = $this->Url.'&auth=1';
+        $url = $this->Url.'&auth=1';
         
-        //cela appelle une méthode pour les comptes premium qui va retourner automatiquement la vrai URL
+        //Permet de recuperer la vrai url directement pour les comptes premium
         if($this->ACCOUNT_TYPE == USER_IS_PREMIUM)
         {
-            $URL_AUTH = $URL_AUTH.'&e=1';
+            $url = $url.'&e=1';
         }
        
         
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE); 
         curl_setopt($curl, CURLOPT_USERAGENT, DOWNLOAD_STATION_USER_AGENT);
-        curl_setopt($curl, CURLOPT_URL, $URL_AUTH);
+        curl_setopt($curl, CURLOPT_URL, $url);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
         curl_setopt($curl, CURLOPT_USERPWD, $this->Username.':'.$this->Password);
@@ -299,7 +300,7 @@ class SynoFileHosting
     */
     private function TypeAccount($Username, $Password)
     {
-        $ret = FALSE;
+        $ret = false;
     
         $queryUrl = 'https://1fichier.com/console/account.pl?user='.$Username.'&pass='.md5($Password);
     
