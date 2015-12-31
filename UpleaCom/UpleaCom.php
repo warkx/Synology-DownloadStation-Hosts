@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 /*Auteur : warkx
   Version originale Developpé le : 16/04/2015
