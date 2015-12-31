@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 /*Auteur : warkx
   Version : 1.0.3
