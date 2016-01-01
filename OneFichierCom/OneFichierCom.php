@@ -2,8 +2,8 @@
 
 /*Auteur : warkx
   Version originale Developpé le : 23/11/2013
-  Version : 2.7.2
-  Développé le : 01/01/2016
+  Version : 2.7.1
+  Développé le : 31/12/2015
   Description : Support du compte gratuit et premium*/
   
 class SynoFileHosting
@@ -204,12 +204,16 @@ class SynoFileHosting
     //telecharge une page en y indiquant une URL
     private function DownloadPage($strUrl)
     {
-       $ret = false;
-       $option = array(CURL_OPTION_FOLLOWLOCATION => true);
-       $curl = GenerateCurl($strUrl,$option);
-       $ret = curl_exec($curl);
-       curl_close($curl);
-       return $ret;
+        $ret = false;
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERAGENT, DOWNLOAD_STATION_USER_AGENT);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE); 
+		curl_setopt($curl, CURLOPT_URL, $strUrl);
+        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+		$ret = curl_exec($curl);
+        curl_close($curl);
+        return $ret;
     }
     
     //Telecharge la page en se connectant
@@ -219,14 +223,18 @@ class SynoFileHosting
         
         $url = $this->Url.'&auth=1';
         
-         //Permet de recuperer la vrai url directement pour les comptes premium
+        //Permet de recuperer la vrai url directement pour les comptes premium
         if($this->ACCOUNT_TYPE == USER_IS_PREMIUM)
         {
             $url = $url.'&e=1';
         }
+       
         
-        $option = array(CURL_OPTION_FOLLOWLOCATION => true);
-        $curl = GenerateCurl($url,$option);
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE); 
+        curl_setopt($curl, CURLOPT_USERAGENT, DOWNLOAD_STATION_USER_AGENT);
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
         curl_setopt($curl, CURLOPT_USERPWD, $this->Username.':'.$this->Password);
         $ret = curl_exec($curl);
@@ -238,37 +246,51 @@ class SynoFileHosting
   //envoie une requete POST pour generer le clic sur Download et renvoie la vrai url du fichier. ou false si la page ne renvoie rien
     private function UrlFileFree($strUrl)
     {
-       $ret = false;
-       $data = array('submit'=>'Download');
-       
-       $option = array(CURL_OPTION_POSTDATA => $data, 
-                       CURL_OPTION_HEADER => false);
-       
-       $curl = GenerateCurl($strUrl,$option);
-       $ret = curl_exec($curl);
-       curl_close($curl);
-       return $ret;
+        $ret = false;
+    
+        $data = array('submit'=>'Download');
+        $data = http_build_query($data);
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE); 
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($curl, CURLOPT_USERAGENT,DOWNLOAD_STATION_USER_AGENT);
+        curl_setopt($curl, CURLOPT_POST, TRUE);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($curl, CURLOPT_HEADER, true);
+        curl_setopt($curl, CURLOPT_URL, $strUrl);
+    
+        $page = curl_exec($curl);
+        curl_close($curl);
+        
+        $ret = $page;
+        return $ret;
     }
   
     //verifie si le lien est valide et retourne le nom du fichier si c'est le cas. Renvoie false si ça n'est pas le cas
     private function CheckLink($strUrl)
     {
-       $ret = false;
-       $data = array('links[]'=>$strUrl);
-       
-       $option = array(CURL_OPTION_POSTDATA => $data);
-       $curl = GenerateCurl($this->CHECKLINK_URL_REQ,$option);
-       $page = curl_exec($curl);
-       curl_close($curl);
-       
-       preg_match($this->FILE_OFFLINE_REGEX, $page, $errormatch);
-       if(!isset($errormatch[0]))
-       {
+        $ret = false;
+        $data = array('links[]'=>$strUrl);
+        $data = http_build_query($data);
+    
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE); 
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($curl, CURLOPT_USERAGENT,DOWNLOAD_STATION_USER_AGENT);
+        curl_setopt($curl, CURLOPT_POST, TRUE);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($curl, CURLOPT_URL, $this->CHECKLINK_URL_REQ);
+        $page = curl_exec($curl);
+        curl_close($curl);
+    
+        preg_match($this->FILE_OFFLINE_REGEX, $page, $errormatch);
+        if(!isset($errormatch[0]))
+        {
             $result = explode(';', $page);
             $ret = $result[1];
-       }
+        }
         
-       return $ret;
+        return $ret;
     }
   
     /*renvoie si le compte est authentifié, si c'est le cas renvoie GRATUIT ou PREMIUM
@@ -282,7 +304,14 @@ class SynoFileHosting
     
         $queryUrl = 'https://1fichier.com/console/account.pl?user='.$Username.'&pass='.md5($Password);
     
-        $page = $this->DownloadPage($queryUrl);
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($curl, CURLOPT_USERAGENT, DOWNLOAD_STATION_USER_AGENT);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($curl, CURLOPT_URL, $queryUrl);
+        $page = curl_exec($curl);
+        curl_close($curl);
     
         if($page == 'error')
         {
