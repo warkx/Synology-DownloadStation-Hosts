@@ -3,7 +3,7 @@
 /*Auteur : warkx
   Version originale Developpé le : 23/11/2013
   Version : 2.7.2
-  Développé le : 01/01/2016
+  Développé le : 03/01/2016
   Description : Support du compte gratuit et premium*/
   
 class SynoFileHosting
@@ -113,18 +113,19 @@ class SynoFileHosting
         //Si aucune page n'est retourné, renvoie false
         if($page != false)
         {
-            $RESULTURL = 0;
             $DownloadInfo = array();
             
             /*Divise le résultat de la page pour recuperer la vrai URL.
             s'il n'est pas trouvé, renvoie ERREUR
             */
             $result = explode(';', $page);
+            $realUrl = $result[0];
             
-            preg_match($this->PREMIUM_REAL_URL_REGEX,$result[$RESULTURL],$urlmatch);
+            preg_match($this->PREMIUM_REAL_URL_REGEX,$realUrl,$urlmatch);
             if(isset($urlmatch[0]))
             {
-                $DownloadInfo[DOWNLOAD_URL] = $result[$RESULTURL];        
+                $DownloadInfo[DOWNLOAD_URL] = $realUrl;
+                $DownloadInfo[DOWNLOAD_ISPARALLELDOWNLOAD] = true;
             }else
             {
                 $DownloadInfo[DOWNLOAD_ERROR] = ERR_UPATE_FAIL;
@@ -173,6 +174,7 @@ class SynoFileHosting
                     if(!empty($realUrl[1]))
                     {
                         $DownloadInfo[DOWNLOAD_URL] = $realUrl[1];
+                        $DownloadInfo[DOWNLOAD_ISPARALLELDOWNLOAD] = false;
                         $URLFinded = true;
                     }
                 }

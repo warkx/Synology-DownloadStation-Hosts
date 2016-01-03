@@ -7,6 +7,7 @@ define('LOGIN_FAIL', 4);
 define('USER_IS_FREE', 5);
 define('USER_IS_PREMIUM', 6);
 define('ERR_UPATE_FAIL', 7);
+define('ERR_BROKEN_LINK', 102);
 define('ERR_FILE_NO_EXIST', 114);
 define('ERR_REQUIRED_PREMIUM', 115);
 define('ERR_NOT_SUPPORT_TYPE', 116);
@@ -19,6 +20,8 @@ define('DEFAULT_HOST_DIR', dirname(realpath($argv[0])) . "/" . 'hosts');
 define('USER_HOST_DIR', '/var/packages/DownloadStation/etc/download/userhosts');
 define('USER_HOST_CONF_DIR', '/var/packages/DownloadStation/etc/download/host.conf');
 define('WGET', '/var/packages/DownloadStation/target/bin/wget');
+define('PYTHON', '/usr/bin/python');
+define('PYLOAD_SYNOTOOL', '/var/packages/DownloadStation/target/pyload/synoTool.py');
 define('DOWNLOAD_STATION_USER_AGENT', "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/535 (KHTML, like Gecko) Chrome/14 Safari/535");
 define('DOWNLOAD_TIMEOUT', 20);
 define('DOWNLOAD_URL', 'downloadurl');
@@ -45,6 +48,7 @@ define('DOWNLOAD_LIST_FILES', 'list_files');
 define('DOWNLOAD_LIST_SELECTED', 'list_selected');
 define('PARAMS_DOWNLOADED_FILES', 'downloadedfiles');
 define('PARAMS_PROCESS', 'downloadprocess');
+define('PARAMS_TASK_ID', 'task_id');
 define('INFO_NAME', 'name');
 define('INFO_HOST_PREFIX', 'hostprefix');
 define('INFO_DISPLAY_NAME', 'displayname');
@@ -64,12 +68,14 @@ define('CURL_OPTION_FOLLOWLOCATION', 'FollowLocation');
 define('CURL_OPTION_HEADER', 'Header');
 
 function LogError($msg) {
+	global $argv;
 	openlog($argv[0], LOG_PID, LOG_USER);
 	syslog(LOG_ERR, $msg);
 	closelog();
 }
 
 function LogInfo($msg) {
+	global $argv;
 	openlog($argv[0], LOG_PID, LOG_USER);
 	syslog(LOG_INFO, $msg);
 	closelog();
@@ -151,6 +157,34 @@ function GenerateCurl($Url, $Option=NULL)
 	$ret = $curl;
 
 	return $ret;
+}
+
+function ExecCmd($binaryPath, array $parameters, &$output = NULL, &$returnValue = NULL)
+{
+	static $skipEscape = array('>', '<', '|', '&');
+
+	if (!is_string($binaryPath) || !is_array($parameters)) {
+		return;
+	}
+
+	$escapedArguments = array();
+	foreach ($parameters as $param) {
+		if (in_array($param, $skipEscape)) {
+			$escapedArguments[] = $param;
+		} else {
+			$cmd = '';
+			foreach (explode('*', $param) as $key => $value) {
+				if ($key !== 0) {
+					$cmd .= '*';
+				}
+				$cmd .= escapeshellarg($value);
+			}
+			$escapedArguments[] = $cmd;
+		}
+	}
+
+	$cmd = escapeshellarg($binaryPath) . " " . implode(' ', $escapedArguments);
+	return exec($cmd, $output, $returnValue);
 }
 
 ?>
