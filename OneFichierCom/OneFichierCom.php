@@ -2,7 +2,7 @@
 
 /*Auteur : warkx
   Version originale Developpé le : 23/11/2013
-  Version : 2.7.2
+  Version : 2.7.3
   Développé le : 03/01/2016
   Description : Support du compte gratuit et premium*/
   
@@ -24,7 +24,8 @@ class SynoFileHosting
     private $DOWNLOAD_WAIT_REGEX = '`You must wait (\d+) minutes`i';
     private $PREMIUM_REAL_URL_REGEX = '`1fichier\.com`i';
     private $FREE_REAL_URL_REGEX = '`href=\"(https?:\/\/[a-z0-9]+-[a-z0-9]+.1fichier.com\/[a-z0-9]+)\"?`i';
-    
+    private $PREMIUM_TYPE_REGEX = '`(^[0-9]{2}+)`i';
+  
     private $WAITING_TIME_DEFAULT = 300;
     private $QUERYAGAIN = 1;
   
@@ -95,7 +96,7 @@ class SynoFileHosting
     public function Verify($ClearCookie)
     {
         $ret = LOGIN_FAIL;
-  
+        
         if(!empty($this->Username) && !empty($this->Password)) 
         {
             $ret = $this->TypeAccount($this->Username, $this->Password);
@@ -280,12 +281,11 @@ class SynoFileHosting
     */
     private function TypeAccount($Username, $Password)
     {
-        $ret = false;
-    
+        $ret = LOGIN_FAIL;
+        
         $queryUrl = 'https://1fichier.com/console/account.pl?user='.$Username.'&pass='.md5($Password);
-    
         $page = $this->DownloadPage($queryUrl);
-    
+        
         if($page == 'error')
         {
             $ret = LOGIN_FAIL;
@@ -296,8 +296,13 @@ class SynoFileHosting
       
         }else
         {
-            $ret = USER_IS_PREMIUM;
+            preg_match($this->PREMIUM_TYPE_REGEX, $page, $numbermatch);
+            if(isset($numbermatch[1]))
+            {
+                $ret = USER_IS_PREMIUM;
+            }
         }
+        
         return $ret; 
     }
   
