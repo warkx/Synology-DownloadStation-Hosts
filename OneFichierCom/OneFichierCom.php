@@ -122,7 +122,7 @@ class SynoFileHosting
             $realUrl = $result[0];
             
             preg_match($this->PREMIUM_REAL_URL_REGEX,$realUrl,$urlmatch);
-            if(isset($urlmatch[0]))
+            if(!empty($urlmatch[0]))
             {
                 $DownloadInfo[DOWNLOAD_URL] = $realUrl;
                 $DownloadInfo[DOWNLOAD_ISPARALLELDOWNLOAD] = true;
@@ -195,7 +195,7 @@ class SynoFileHosting
         $ret = false;
         preg_match($this->DOWNLOAD_WAIT_REGEX, $page, $waitingmatch);
     
-        if(isset($waitingmatch[1]))
+        if(!empty($waitingmatch[1]))
         {
             $waitingtime = ($waitingmatch[1] *60) + 10;
             $ret['COUNT'] = $waitingtime;
