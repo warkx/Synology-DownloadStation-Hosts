@@ -183,7 +183,7 @@ class SynoFileHosting
                 
                 if($URLFinded == false)
                 {
-                    $DownloadInfo[DOWNLOAD_COUNT] = $this->WAITING_TIME_DEFAULT;
+                    $DownloadInfo[DOWNLOAD_COUNT] = $this->WAITING_TIME_DEFAULT + rand(1, 30);
                     $DownloadInfo[DOWNLOAD_ISQUERYAGAIN] = $this->QUERYAGAIN;
                 }
             }
@@ -199,7 +199,7 @@ class SynoFileHosting
     
         if(!empty($waitingmatch[1]))
         {
-            $waitingtime = ($waitingmatch[1] *60) + 10;
+            $waitingtime = ($waitingmatch[1] *60) + rand(10, 40);
             $ret['COUNT'] = $waitingtime;
         }
         return $ret;
