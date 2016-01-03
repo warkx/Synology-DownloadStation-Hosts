@@ -22,8 +22,9 @@ class SynoFileHosting
     private $FILEID_OLD_REGEX = '`https?:\/\/([a-z0-9A-Z]+)\.1fichier\.com\/?`i';
     private $FILE_OFFLINE_REGEX = '`BAD LINK|NOT FOUND`i';
     private $DOWNLOAD_WAIT_REGEX = '`You must wait (\d+) minutes`i';
-    private $PREMIUM_REAL_URL_REGEX = '`1fichier\.com`i';
-    private $FREE_REAL_URL_REGEX = '`href=\"(https?:\/\/[a-z0-9]+-[a-z0-9]+.1fichier.com\/[a-z0-9]+)\"?`i';
+    private $PREMIUM_REAL_URL_REGEX = '`https?:\/\/[a-z0-9]+-[a-z0-9]+\.1fichier\.com\/[a-z0-9]+`i';
+    private $FREE_REAL_URL_REGEX = '`href=\"(https?:\/\/[a-z0-9]+-[a-z0-9]+\.1fichier\.com\/[a-z0-9]+)\"?`i';
+    
     private $PREMIUM_TYPE_REGEX = '`(^[0-9]{2}+)`i';
   
     private $WAITING_TIME_DEFAULT = 300;
@@ -284,6 +285,7 @@ class SynoFileHosting
         $ret = LOGIN_FAIL;
         
         $queryUrl = 'https://1fichier.com/console/account.pl?user='.$Username.'&pass='.md5($Password);
+        
         $page = $this->DownloadPage($queryUrl);
         
         if($page == 'error')
