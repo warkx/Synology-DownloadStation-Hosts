@@ -2,8 +2,8 @@
 
 /*Auteur : warkx
   Version originale Developpé le : 23/11/2013
-  Version : 2.7.3
-  Développé le : 03/01/2016
+  Version : 2.8
+  Développé le : 09/03/2016
   Description : Support du compte gratuit et premium*/
   
 class SynoFileHosting
@@ -130,7 +130,17 @@ class SynoFileHosting
                 $DownloadInfo[DOWNLOAD_ISPARALLELDOWNLOAD] = true;
             }else
             {
-                $DownloadInfo[DOWNLOAD_ERROR] = ERR_UPATE_FAIL;
+                $page = $this->UrlFilePremiumWithDownloadMenu();
+                
+                preg_match($this->PREMIUM_REAL_URL_REGEX,$page,$urlmatch);
+                if(!empty($urlmatch[0]))
+                {
+                    $DownloadInfo[DOWNLOAD_URL] = $urlmatch[0];
+                    $DownloadInfo[DOWNLOAD_ISPARALLELDOWNLOAD] = true;  
+                }else
+                {
+                    $DownloadInfo[DOWNLOAD_ERROR] = ERR_UPATE_FAIL;
+                }
             }
         }
         return $DownloadInfo;
@@ -168,7 +178,13 @@ class SynoFileHosting
                 $page = false;
                 $URLFinded = false;
                 
-                $page = $this->UrlFileFree($this->Url);
+                if($this->ACCOUNT_TYPE != LOGIN_FAIL)
+                {
+                    $page = $this->UrlFileWithFreeAccount();
+                }else
+                {
+                    $page = $this->UrlFileFree($this->Url);
+                }
                 
                 if($page != false)
                 {
@@ -183,7 +199,7 @@ class SynoFileHosting
                 
                 if($URLFinded == false)
                 {
-                    $DownloadInfo[DOWNLOAD_COUNT] = $this->WAITING_TIME_DEFAULT + rand(1, 30);
+                    $DownloadInfo[DOWNLOAD_COUNT] = $this->WAITING_TIME_DEFAULT;
                     $DownloadInfo[DOWNLOAD_ISQUERYAGAIN] = $this->QUERYAGAIN;
                 }
             }
@@ -199,7 +215,7 @@ class SynoFileHosting
     
         if(!empty($waitingmatch[1]))
         {
-            $waitingtime = ($waitingmatch[1] *60) + rand(10, 40);
+            $waitingtime = ($waitingmatch[1] *60) + 10;
             $ret['COUNT'] = $waitingtime;
         }
         return $ret;
@@ -229,13 +245,54 @@ class SynoFileHosting
             $url = $url.'&e=1';
         }
         
-        $option = array(CURL_OPTION_FOLLOWLOCATION => true);
+        $option = array(CURL_OPTION_FOLLOWLOCATION =>false);
         $curl = GenerateCurl($url,$option);
         curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
         curl_setopt($curl, CURLOPT_USERPWD, $this->Username.':'.$this->Password);
         $ret = curl_exec($curl);
         curl_close($curl);
         
+        return $ret;
+    }
+    
+    //retourne la page après s'etre connecté en premium et avoir cliqué sur le menu de telechargement
+    private function UrlFilePremiumWithDownloadMenu()
+    {
+        $ret = false;
+        
+        $url = $this->Url.'&auth=1&e=1';
+        
+        $data = array('submit'=>'Download');
+        $option = array(CURL_OPTION_POSTDATA => $data, 
+                        CURL_OPTION_HEADER => true,
+                        CURL_OPTION_FOLLOWLOCATION =>false);
+                        
+        $curl = GenerateCurl($url,$option);
+        curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+        curl_setopt($curl, CURLOPT_USERPWD, $this->Username.':'.$this->Password);
+        $ret = curl_exec($curl);
+        curl_close($curl);
+        
+        return $ret;
+    }
+    
+    
+     //Retourne la page après avoir cliqué sur le bouton et s'etre authentifié en gratuit
+    private function UrlFileWithFreeAccount()
+    {
+        $ret = false;
+        $url = $this->Url.'&auth=1';
+        
+        $data = array('submit'=>'Download');
+        $option = array(CURL_OPTION_POSTDATA => $data, 
+                        CURL_OPTION_FOLLOWLOCATION =>false);
+                       
+        $curl = GenerateCurl($url,$option);
+        curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+        curl_setopt($curl, CURLOPT_USERPWD, $this->Username.':'.$this->Password);
+        $ret = curl_exec($curl);
+        curl_close($curl);
+
         return $ret;
     }
   
