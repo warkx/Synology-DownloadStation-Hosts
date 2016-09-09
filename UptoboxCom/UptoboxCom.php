@@ -1,8 +1,9 @@
 <?php
 
 /*Auteur : warkx
-  Version : 1.0.3
-  Développé le : 06/08/2015
+  Partie premium developpé par : Einsteinium
+  Version : 1.1
+  Développé le : 09/09/2016
   Description : Support du compte gratuit et premium*/
   
   
@@ -23,8 +24,8 @@ class SynoFileHosting
     private $ID_REGEX = '/name="id"\s*value="(.*)"/i';
     private $FILE_SIZE_REAL_REGEX = '/name="file_size_real"\s*value="(.*)"/i';
     private $FILE_OFFLINE_REGEX = '/The file was deleted|Page not found/i';
-    private $DOWNLOAD_WAIT_REGEX = '/You have to wait ((\d+) minute)*/i';
-    private $FILE_URL_REGEX = '`<!--DOWNLOAD BUTTON-->.*?href="(.*?)">`si';
+    private $DOWNLOAD_WAIT_REGEX = '/>To give priority to premium users, you have to wait (.+) to launch a new download\.</i';
+    private $FILE_URL_REGEX = '`"(https?:\/\/(?:obwp\d+\.uptobox\.com|\w+\.uptobox\.com\/d)\/.*?)"`si';
     private $ACCOUNT_TYPE_REGEX = '/Premium\s*member/i';
     private $ERROR_404_URL_REGEX = '/uptobox.com\/404.html/i';
   
@@ -124,7 +125,7 @@ class SynoFileHosting
     {
         $DowloadInfo = false;
         $page = $this->DownloadParsePage($LoadCookie);
-        
+
         if($page != false)
         {
             //Termine la fonction si le fichier est offline
@@ -195,13 +196,23 @@ class SynoFileHosting
     private function VerifyWaitDownload($page)
     {
         $ret = false;
-    
+        
         preg_match($this->DOWNLOAD_WAIT_REGEX, $page, $waitingmatch);
         if(!empty($waitingmatch[0]))
         {
-            if(!empty($waitingmatch[2]))
+            if(!empty($waitingmatch[1]))
             {
-                $waitingtime = ($waitingmatch[2] *60) + 70;
+                $waitingtime = 0;
+                preg_match('`(\d+) hour`si', $waitingmatch[1], $waitinghourmatch);
+                if(!empty($waitinghourmatch[1]))
+                {
+                    $waitingtime = ($waitinghourmatch[1] * 3600);
+                }
+                preg_match('`(\d+) minute`si', $waitingmatch[1], $waitingminmatch);
+                if(!empty($waitingminmatch[1]))
+                {
+                    $waitingtime = $waitingtime + ($waitingminmatch[1] * 60) + 70;
+                }
             }else
             {
                 $waitingtime = 70;
