@@ -2,10 +2,12 @@
 
 /*Auteur : warkx
   Partie premium developpé par : Einsteinium
-  Version : 1.1
-  Développé le : 09/09/2016
+  Aidé par : Polo.Q
+  Version : 1.2
+  Développé le : 13/01/2017
   Description : Support du compte gratuit et premium*/
-
+  
+  
 class SynoFileHosting
 {
     private $Url;
@@ -110,7 +112,7 @@ class SynoFileHosting
         
         if($ret == false)
         {
-          $DownloadInfo[DOWNLOAD_ERROR] = ERR_FILE_NO_EXIST;
+            $DownloadInfo[DOWNLOAD_ERROR] = ERR_FILE_NO_EXIST;
         }else
         {
           $this->GenerateRequest($ret);
@@ -119,7 +121,8 @@ class SynoFileHosting
           if(!empty($urlmatch[1]))
           {
             $DownloadInfo[DOWNLOAD_URL] = $urlmatch[1];
-          }else{
+          }else
+          {
             $DownloadInfo[DOWNLOAD_ERROR] = ERR_FILE_NO_EXIST;
           }
           $DownloadInfo[DOWNLOAD_FILENAME] = $this->TAB_REQUEST[$this->STRING_FNAME];
@@ -347,31 +350,32 @@ class SynoFileHosting
     private function UrlFilePremium()
     {
         $ret = false;
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_USERAGENT, DOWNLOAD_STATION_USER_AGENT);
-        curl_setopt($curl, CURLOPT_URL, $this->Url);
-        curl_setopt($curl, CURLOPT_COOKIEFILE, $this->COOKIE_FILE);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); 
-        curl_setopt($curl, CURLOPT_HEADER, true);
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERAGENT, DOWNLOAD_STATION_USER_AGENT);
+		curl_setopt($curl, CURLOPT_URL, $this->Url);
+		curl_setopt($curl, CURLOPT_COOKIEFILE, $this->COOKIE_FILE);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); 
+		curl_setopt($curl, CURLOPT_HEADER, true);
 
-        $header = curl_exec($curl);
-        $info = curl_getinfo($curl);
+		$header = curl_exec($curl);
+		$info = curl_getinfo($curl);
         curl_close($curl);
-        
-        $error_code = $info['http_code'];
-        if ($error_code == 301 || $error_code == 302) 
+    
+		$error_code = $info['http_code'];
+		
+		if ($error_code == 301 || $error_code == 302) 
         { 
-          $ret = $info['redirect_url'];
-        }
+			$ret = $info['redirect_url'];
+		}
         preg_match($this->ERROR_404_URL_REGEX, $ret, $finderror);
         if(isset($finderror[0]))
         {
-          $ret = false;
+            $ret = false;
+        }else
+        {
+            $ret = $header;
         }
-        else{
-          $ret = $header;
-        }
-        return $ret;
+		return $ret;
     }
-
 }
+?>
