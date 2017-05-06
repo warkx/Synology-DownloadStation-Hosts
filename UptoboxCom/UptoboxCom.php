@@ -3,8 +3,8 @@
 /*Auteur : warkx
   Partie premium developpé par : Einsteinium
   Aidé par : Polo.Q
-  Version : 1.2
-  Développé le : 13/01/2017
+  Version : 1.3
+  Développé le : 06/05/2017
   Description : Support du compte gratuit et premium*/
   
   
@@ -25,7 +25,7 @@ class SynoFileHosting
     private $ID_REGEX = '/name="id"\s*value="(.*)"/i';
     private $FILE_SIZE_REAL_REGEX = '/name="file_size_real"\s*value="(.*)"/i';
     private $FILE_OFFLINE_REGEX = '/The file was deleted|Page not found/i';
-    private $DOWNLOAD_WAIT_REGEX = '/>To give priority to premium users, you have to wait (.+) to launch a new download\.</i';
+    private $DOWNLOAD_WAIT_REGEX = '/can wait (.+) to launch a new download/i';
     private $FILE_URL_REGEX = '`"(https?:\/\/(?:obwp\d+\.uptobox\.com|\w+\.uptobox\.com\/d)\/.*?)"`si';
     private $ACCOUNT_TYPE_REGEX = '/Premium\s*member/i';
     private $ERROR_404_URL_REGEX = '/uptobox.com\/404.html/i';
@@ -33,7 +33,7 @@ class SynoFileHosting
     private $STRING_COUNT = 'count';
     private $STRING_FNAME = 'fname';
     private $QUERYAGAIN = 1;
-    private $WAITING_TIME_DEFAULT = 300;
+    private $WAITING_TIME_DEFAULT = 1800;
     
     private $TAB_REQUEST = array('op' => 'download2',
                                 'id' => '',
@@ -125,6 +125,7 @@ class SynoFileHosting
           {
             $DownloadInfo[DOWNLOAD_ERROR] = ERR_FILE_NO_EXIST;
           }
+          $DownloadInfo[DOWNLOAD_ISPARALLELDOWNLOAD] = true;
           $DownloadInfo[DOWNLOAD_FILENAME] = $this->TAB_REQUEST[$this->STRING_FNAME];
           $DownloadInfo[DOWNLOAD_COOKIE] = $this->COOKIE_FILE;
         }
@@ -170,6 +171,7 @@ class SynoFileHosting
                         $DownloadInfo[DOWNLOAD_ISQUERYAGAIN] = $this->QUERYAGAIN;
                     }
                 }
+                $DownloadInfo[DOWNLOAD_ISPARALLELDOWNLOAD] = false;
             }
             if($LoadCookie == true)
             {
