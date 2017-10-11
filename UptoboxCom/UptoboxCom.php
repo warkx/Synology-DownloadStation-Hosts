@@ -2,9 +2,9 @@
 
 /*Auteur : warkx
   Partie premium developpé par : Einsteinium
-  Aidé par : Polo.Q
-  Version : 1.3
-  Développé le : 06/05/2017
+  Aidé par : Polo.Q, Samzor
+  Version : 1.4
+  Développé le : 11/10/2017
   Description : Support du compte gratuit et premium*/
   
   
@@ -17,7 +17,7 @@ class SynoFileHosting
     private $CookieValue;
   
     private $COOKIE_FILE = '/tmp/uptobox.cookie';
-    private $LOGIN_URL = 'https://login.uptobox.com/log';
+    private $LOGIN_URL = 'https://login.uptobox.com/logarithme';
     private $ACCOUNT_TYPE_URL = 'https://uptobox.com/?op=my_account';
   
     private $FILE_NAME_REGEX = '/name="fname"\s*value="(.*)"/i';
