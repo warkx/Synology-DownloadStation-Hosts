@@ -3,8 +3,8 @@
 /*Auteur : warkx
   Partie premium developpé par : Einsteinium
   Aidé par : Polo.Q, Samzor
-  Version : 1.5
-  Développé le : 17/02/2018
+  Version : 1.5.1
+  Développé le : 18/02/2018
   Description : Support du compte gratuit et premium*/
   
   
@@ -20,14 +20,13 @@ class SynoFileHosting
     private $LOGIN_URL = 'https://login.uptobox.com/logarithme';
     private $ACCOUNT_TYPE_URL = 'https://uptobox.com/?op=my_account';
   
-    private $FILE_NAME_REGEX = '/name="fname"\s*value="(.*)"/i';
+    private $FILE_NAME_REGEX = '/<title>(.+?)<\/title>/si';
     private $RAND_REGEX = '/name="rand"\s*value="(.*)"/i';
     private $ID_REGEX = '/name="id"\s*value="(.*)"/i';
     private $FILE_SIZE_REAL_REGEX = '/name="file_size_real"\s*value="(.*)"/i';
     private $FILE_OFFLINE_REGEX = '/The file was deleted|Page not found/i';
     private $DOWNLOAD_WAIT_REGEX = '/can wait (.+) to launch a new download/i';
-    private $FILE_URL_REGEX_PREMIUM = '`(https?:\/\/\w+\.uptobox\.com\/dl\/.*)`i';
-    private $FILE_URL_REGEX_FREE = '`"(https?:\/\/\w+\.uptobox\.com\/dl\/.*)"`i';
+    private $FILE_URL_REGEX = '`(https?:\/\/\w+\.uptobox\.com\/dl\/.+?)(?:"|\n|$)`si';
     private $ACCOUNT_TYPE_REGEX = '/Premium\s*member/i';
     private $ERROR_404_URL_REGEX = '/uptobox.com\/404.html/i';
   
@@ -110,6 +109,7 @@ class SynoFileHosting
         $ret = false;
         $DownloadInfo = array();
         $ret = $this->UrlFilePremium();
+
         if($ret == false)
         {
             $DownloadInfo[DOWNLOAD_ERROR] = ERR_FILE_NO_EXIST;
@@ -117,7 +117,7 @@ class SynoFileHosting
         {
           $this->GenerateRequest($ret);
           $page = $this->UrlFileFree(true);
-          preg_match($this->FILE_URL_REGEX_PREMIUM,$page,$urlmatch);
+          preg_match($this->FILE_URL_REGEX,$page,$urlmatch);
           if(!empty($urlmatch[1]))
           {
             $DownloadInfo[DOWNLOAD_URL] = $urlmatch[1];
@@ -161,7 +161,7 @@ class SynoFileHosting
                     
                     //clique sur le bouton "Generer le lien" et recupere la vrai URL
                     $page = $this->UrlFileFree($LoadCookie);
-                    preg_match($this->FILE_URL_REGEX_FREE,$page,$urlmatch);
+                    preg_match($this->FILE_URL_REGEX,$page,$urlmatch);
                     if(!empty($urlmatch[1]))
                     {
                         $DownloadInfo[DOWNLOAD_URL] = $urlmatch[1];
@@ -343,7 +343,7 @@ class SynoFileHosting
     
         $header = curl_exec($curl);
         curl_close($curl);
-        
+
         $ret = $header;
         return $ret;
     }
