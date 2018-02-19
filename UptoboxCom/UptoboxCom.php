@@ -3,8 +3,8 @@
 /*Auteur : warkx
   Partie premium developpé par : Einsteinium
   Aidé par : Polo.Q, Samzor
-  Version : 1.5.1
-  Développé le : 18/02/2018
+  Version : 1.5.2
+  Développé le : 19/02/2018
   Description : Support du compte gratuit et premium*/
   
   
@@ -21,9 +21,6 @@ class SynoFileHosting
     private $ACCOUNT_TYPE_URL = 'https://uptobox.com/?op=my_account';
   
     private $FILE_NAME_REGEX = '/<title>(.+?)<\/title>/si';
-    private $RAND_REGEX = '/name="rand"\s*value="(.*)"/i';
-    private $ID_REGEX = '/name="id"\s*value="(.*)"/i';
-    private $FILE_SIZE_REAL_REGEX = '/name="file_size_real"\s*value="(.*)"/i';
     private $FILE_OFFLINE_REGEX = '/The file was deleted|Page not found/i';
     private $DOWNLOAD_WAIT_REGEX = '/can wait (.+) to launch a new download/i';
     private $FILE_URL_REGEX = '`(https?:\/\/\w+\.uptobox\.com\/dl\/.+?)(?:"|\n|$)`si';
@@ -35,16 +32,6 @@ class SynoFileHosting
     private $QUERYAGAIN = 1;
     private $WAITING_TIME_DEFAULT = 1800;
     
-    private $TAB_REQUEST = array('op' => 'download2',
-                                'id' => '',
-                                'fname' => '',
-                                'rand' => '',
-                                'refer' => '',
-                                'file_size_real'=>'',
-                                'method_free' =>'',
-                                'method_premium' => '',
-                                'down_direct' => '1');
-  
     public function __construct($Url, $Username, $Password, $HostInfo) 
     {
 		$this->Url = $Url;
@@ -115,8 +102,14 @@ class SynoFileHosting
             $DownloadInfo[DOWNLOAD_ERROR] = ERR_FILE_NO_EXIST;
         }else
         {
-          $this->GenerateRequest($ret);
-          $page = $this->UrlFileFree(true);
+          $page = $ret;
+          
+          preg_match($this->FILE_NAME_REGEX, $page, $filenamematch);
+          if(!empty($filenamematch[1]))
+          {
+            $DownloadInfo[DOWNLOAD_FILENAME] = $filenamematch[1];
+          }
+          
           preg_match($this->FILE_URL_REGEX,$page,$urlmatch);
           if(!empty($urlmatch[1]))
           {
@@ -125,8 +118,8 @@ class SynoFileHosting
           {
             $DownloadInfo[DOWNLOAD_ERROR] = ERR_FILE_NO_EXIST;
           }
+          
           $DownloadInfo[DOWNLOAD_ISPARALLELDOWNLOAD] = true;
-          $DownloadInfo[DOWNLOAD_FILENAME] = $this->TAB_REQUEST[$this->STRING_FNAME];
           $DownloadInfo[DOWNLOAD_COOKIE] = $this->COOKIE_FILE;
         }
         return $DownloadInfo;
@@ -156,11 +149,12 @@ class SynoFileHosting
                 }else
                 {
                     //genere la requete pour cliquer sur "Generer le lien" et recupere le nom du fichier
-                    $this->GenerateRequest($page);
-                    $DownloadInfo[DOWNLOAD_FILENAME] = $this->TAB_REQUEST[$this->STRING_FNAME];
+                    preg_match($this->FILE_NAME_REGEX, $page, $filenamematch);
+                    if(!empty($filenamematch[1]))
+                    {
+                        $DownloadInfo[DOWNLOAD_FILENAME] = $filenamematch[1];
+                    }
                     
-                    //clique sur le bouton "Generer le lien" et recupere la vrai URL
-                    $page = $this->UrlFileFree($LoadCookie);
                     preg_match($this->FILE_URL_REGEX,$page,$urlmatch);
                     if(!empty($urlmatch[1]))
                     {
@@ -179,30 +173,6 @@ class SynoFileHosting
             }
         }
         return $DownloadInfo;
-    }
-  
-    private function GenerateRequest($page)
-    {
-        preg_match($this->FILE_NAME_REGEX, $page, $filenamematch);
-        if(!empty($filenamematch[1]))
-        {
-            $this->TAB_REQUEST[$this->STRING_FNAME] = $filenamematch[1];
-        }
-        preg_match($this->RAND_REGEX, $page, $randmatch);
-        if(!empty($randmatch[1]))
-        {
-            $this->TAB_REQUEST['rand'] =  $randmatch[1];
-        }
-        preg_match($this->ID_REGEX, $page, $idmatch);
-        if(!empty($idmatch[1]))
-        {
-            $this->TAB_REQUEST['id'] =  $idmatch[1];
-        }
-        preg_match($this->FILE_SIZE_REAL_REGEX, $page, $filesizerealmatch);
-        if(!empty($filesizerealmatch[1]))
-        {
-            $this->TAB_REQUEST['file_size_real'] = $filesizerealmatch[1];
-        }
     }
     
     //Renvoie le temps d'attente indiqué sur la page, ou false s'il n'y en a pas
@@ -320,34 +290,7 @@ class SynoFileHosting
         $this->Url = $info['url'];
         return $ret; 
     }
-  
-    //renvoie la vrai URL du fichier en mode gratuit
-    private function UrlFileFree($LoadCookie)
-    {
-        $ret = false;
-        $data = $this->TAB_REQUEST;
-        $data = http_build_query($data);
-        $curl = curl_init();
     
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE); 
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-        curl_setopt($curl, CURLOPT_USERAGENT,DOWNLOAD_STATION_USER_AGENT);
-        if($LoadCookie == true)
-        {
-            curl_setopt($curl, CURLOPT_COOKIEFILE, $this->COOKIE_FILE);
-        }
-        curl_setopt($curl, CURLOPT_POST, TRUE);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-        curl_setopt($curl, CURLOPT_HEADER, true);
-        curl_setopt($curl, CURLOPT_URL, $this->Url);
-    
-        $header = curl_exec($curl);
-        curl_close($curl);
-
-        $ret = $header;
-        return $ret;
-    }
-  
     //renvoie la vrai url du fichier en mode premium. Ou false si elle n'est pa affiché
     private function UrlFilePremium()
     {
