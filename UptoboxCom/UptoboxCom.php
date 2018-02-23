@@ -3,8 +3,8 @@
 /*Auteur : warkx
   Partie premium developpé par : Einsteinium
   Aidé par : Polo.Q, Samzor
-  Version : 1.6
-  Développé le : 22/02/2018
+  Version : 1.6.1
+  Développé le : 23/02/2018
   Description : Support du compte gratuit et premium*/
   
   
@@ -129,15 +129,15 @@ class SynoFileHosting
           preg_match($this->FILE_NAME_REGEX, $page, $filenamematch);
           if(!empty($filenamematch[1]))
           {
-            $DownloadInfo[DOWNLOAD_FILENAME] = $filenamematch[1];
-            $this->DebugMessage($filenamematch[1]);
+            $DownloadInfo[DOWNLOAD_FILENAME] = trim($filenamematch[1]);
+            $this->DebugMessage(trim($filenamematch[1]));
           }
           
           preg_match($this->FILE_URL_REGEX,$page,$urlmatch);
           if(!empty($urlmatch[1]))
           {
-            $DownloadInfo[DOWNLOAD_URL] = $urlmatch[1];
-            $this->DebugMessage("URL_PREMIUM: ".$urlmatch[1]);
+            $DownloadInfo[DOWNLOAD_URL] = trim($urlmatch[1]);
+            $this->DebugMessage("URL_PREMIUM: ".trim($urlmatch[1]));
           }else
           {
             $DownloadInfo[DOWNLOAD_ERROR] = ERR_FILE_NO_EXIST;
@@ -179,8 +179,8 @@ class SynoFileHosting
                     preg_match($this->FILE_NAME_REGEX, $page, $filenamematch);
                     if(!empty($filenamematch[1]))
                     {
-                        $DownloadInfo[DOWNLOAD_FILENAME] = $filenamematch[1];
-                        $this->DebugMessage("FILENAME_FREE: ".$filenamematch[1]);
+                        $DownloadInfo[DOWNLOAD_FILENAME] = trim($filenamematch[1]);
+                        $this->DebugMessage("FILENAME_FREE: ".trim($filenamematch[1]));
                     }
                     
                     //clique sur le bouton "Generer le lien" et recupere la vrai URL
@@ -190,8 +190,8 @@ class SynoFileHosting
                     preg_match($this->FILE_URL_REGEX,$page,$urlmatch);
                     if(!empty($urlmatch[1]))
                     {
-                        $DownloadInfo[DOWNLOAD_URL] = $urlmatch[1];
-                        $this->DebugMessage("URL_FREE: ".$filenamematch[1]);
+                        $DownloadInfo[DOWNLOAD_URL] = trim($urlmatch[1]);
+                        $this->DebugMessage("URL_FREE: ".trim($urlmatch[1]));
                     }else
                     {
                         $DownloadInfo[DOWNLOAD_COUNT] = $this->WAITING_TIME_DEFAULT;
