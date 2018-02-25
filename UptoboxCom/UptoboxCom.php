@@ -3,8 +3,8 @@
 /*Auteur : warkx
   Partie premium developpé par : Einsteinium
   Aidé par : Polo.Q, Samzor
-  Version : 1.6.1
-  Développé le : 23/02/2018
+  Version : 1.6.2
+  Développé le : 25/02/2018
   Description : Support du compte gratuit et premium*/
   
   
@@ -24,7 +24,7 @@ class SynoFileHosting
     private $WAITINGTOKEN_FILEPATH = '/tmp/';
     private $LOG_FILE = '/tmp/uptobox.log';
     
-    private $LOGIN_URL = 'https://login.uptobox.com/logarithme';
+    private $LOGIN_URL = 'https://uptobox.com/?op=login';
     private $ACCOUNT_TYPE_URL = 'https://uptobox.com/?op=my_account';
     
     private $WAITINGTOKEN_REGEX = "/waitingToken' value='(.*?)'/i";
@@ -315,8 +315,7 @@ class SynoFileHosting
     {
         $ret = LOGIN_FAIL;
 		$PostData = array('login'=>$this->Username,
-                        'password'=>$this->Password,
-                        'op'=>'login');
+                        'password'=>$this->Password);
             
 		$queryUrl = $this->LOGIN_URL;
 		$PostData = http_build_query($PostData);
