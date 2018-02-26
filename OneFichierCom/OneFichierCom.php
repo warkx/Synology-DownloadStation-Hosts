@@ -2,8 +2,8 @@
 
 /*Auteur : warkx
   Version originale Developpé le : 23/11/2013
-  Version : 2.8
-  Développé le : 09/03/2016
+  Version : 2.8.2
+  Développé le : 26/02/2018
   Description : Support du compte gratuit et premium*/
   
 class SynoFileHosting
@@ -192,7 +192,7 @@ class SynoFileHosting
                     if(!empty($realUrl[1]))
                     {
                         $DownloadInfo[DOWNLOAD_URL] = $realUrl[1];
-                        $DownloadInfo[DOWNLOAD_ISPARALLELDOWNLOAD] = false;
+                        //$DownloadInfo[DOWNLOAD_ISPARALLELDOWNLOAD] = false;
                         $URLFinded = true;
                     }
                 }
@@ -353,7 +353,11 @@ class SynoFileHosting
         {
         	$ret = USER_IS_FREE;
       
-        }else
+        }else if(($this->StartsWith($page, '0')) == true)
+        {
+            $ret = USER_IS_PREMIUM;
+        }
+        else
         {
             preg_match($this->PREMIUM_TYPE_REGEX, $page, $numbermatch);
             if(isset($numbermatch[1]))
@@ -399,6 +403,19 @@ class SynoFileHosting
         //créé une url d'origine propre
         $this->ORIGINAL_URL = 'https://1fichier.com/?'.$this->FILEID;
         $this->Url = $this->ORIGINAL_URL.'&lg=en';
+    }
+    
+    /**
+    * StartsWith
+    * Tests if a text starts with an given string.
+    *
+    * @param     string
+    * @param     string
+    * @return    bool
+    */
+    private function StartsWith($Haystack, $Needle)
+    {
+        return strpos($Haystack, $Needle) === 0;
     }
 }
 ?>
