@@ -2,7 +2,7 @@
 	"name": "UptoboxCom",
 	"hostprefix": "uptobox.com",
 	"displayname": "Uptobox",
-	"version": "1.6.2",
+	"version": "1.6.3",
 	"authentication": "yes",
 	"module": "UptoboxCom.php",
 	"class": "SynoFileHosting",

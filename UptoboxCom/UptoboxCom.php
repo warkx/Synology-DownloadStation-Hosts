@@ -3,8 +3,8 @@
 /*Auteur : warkx
   Partie premium developpé par : Einsteinium
   Aidé par : Polo.Q, Samzor
-  Version : 1.6.2
-  Développé le : 25/02/2018
+  Version : 1.6.3
+  Développé le : 27/02/2018
   Description : Support du compte gratuit et premium*/
   
   
@@ -315,7 +315,8 @@ class SynoFileHosting
     {
         $ret = LOGIN_FAIL;
 		$PostData = array('login'=>$this->Username,
-                        'password'=>$this->Password);
+                        'password'=>$this->Password,
+                        'op'=>'login');
             
 		$queryUrl = $this->LOGIN_URL;
 		$PostData = http_build_query($PostData);
