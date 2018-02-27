@@ -2,8 +2,8 @@
 
 /*Auteur : warkx
   Version originale Developpé le : 23/11/2013
-  Version : 2.8.2
-  Développé le : 26/02/2018
+  Version : 2.9
+  Développé le : 27/02/2018
   Description : Support du compte gratuit et premium*/
   
 class SynoFileHosting
@@ -15,7 +15,11 @@ class SynoFileHosting
     private $FILEID;
     private $ORIGINAL_URL;
     private $ACCOUNT_TYPE;
-   
+    private $ADZONE_VALUE = '';
+    
+    private $ENABLE_DEBUG = FALSE;
+    private $LOG_FILE = '/tmp/1fichier.log';
+    
     private $CHECKLINK_URL_REQ = 'https://1fichier.com/check_links.pl';
     
     private $FILEID_REGEX = '`https?:\/\/1fichier\.com\/\?([a-zA-Z0-9]+)\/?`i';
@@ -24,6 +28,8 @@ class SynoFileHosting
     private $DOWNLOAD_WAIT_REGEX = '`You must wait (\d+) minutes`i';
     private $PREMIUM_REAL_URL_REGEX = '`https?:\/\/[a-z0-9]+-[a-z0-9]+\.1fichier\.com\/[a-z0-9]+`i';
     private $FREE_REAL_URL_REGEX = '`href=\"(https?:\/\/[a-z0-9]+-[a-z0-9]+\.1fichier\.com\/[a-z0-9]+)\"?`i';
+    private $DEBUG_REGEX = '/(https?:\/\/1fichier\.com\/.+)\/debug/i';
+    private $ADZONE_REGEX = '`name="adzone" value="(.+?)"`i';
     
     private $PREMIUM_TYPE_REGEX = '`(^[0-9]{2}+)`i';
   
@@ -36,6 +42,18 @@ class SynoFileHosting
         $this->Username = $Username;
         $this->Password = $Password;
         $this->HostInfo = $HostInfo;
+        
+        //verifie si le debug est activé avec un "/debug"
+        preg_match($this->DEBUG_REGEX, $Url, $debugmatch);
+        if(!empty($debugmatch[1]))
+        {
+            $this->Url = $debugmatch[1];
+            $this->ENABLE_DEBUG = TRUE;
+        }else
+        {
+            $this->Url = $Url;
+        }
+        $this->DebugMessage("URL: ".$this->Url);
     }
   
     //fonction a executer pour recuperer les informations d'un fichier en fonction d'un lien
@@ -111,6 +129,7 @@ class SynoFileHosting
         $DownloadInfo = false;
     
         $page = $this->DownloadPageWithAuth();
+        $this->DebugMessage("PAGE_PREMIUM: ".$page);
         
         //Si aucune page n'est retourné, renvoie false
         if($page != false)
@@ -127,6 +146,7 @@ class SynoFileHosting
             if(!empty($urlmatch[0]))
             {
                 $DownloadInfo[DOWNLOAD_URL] = $realUrl;
+                $this->DebugMessage("URL_PREMIUM: ".$realUrl);
                 $DownloadInfo[DOWNLOAD_ISPARALLELDOWNLOAD] = true;
             }else
             {
@@ -136,6 +156,7 @@ class SynoFileHosting
                 if(!empty($urlmatch[0]))
                 {
                     $DownloadInfo[DOWNLOAD_URL] = $urlmatch[0];
+                    $this->DebugMessage("URL_PREMIUM: ".$urlmatch[0]);
                     $DownloadInfo[DOWNLOAD_ISPARALLELDOWNLOAD] = true;  
                 }else
                 {
@@ -158,7 +179,10 @@ class SynoFileHosting
         {
             $page = $this->DownloadPage($this->Url);
         }
+        $this->DebugMessage("PAGE_FREE: ".$page);
         
+        $this->GenerateRequest($page);
+        $this->DebugMessage("ADZONE_VALUE: ".$this->ADZONE_VALUE);
         
         //Si aucune page n'est retourné, renvoie false
         if($page != false)
@@ -168,6 +192,7 @@ class SynoFileHosting
             if($result != false)
             {
                 $DownloadInfo[DOWNLOAD_COUNT] = $result['COUNT'];
+                $this->DebugMessage("WAITING_FREE: ".$result['COUNT']);
                 $DownloadInfo[DOWNLOAD_ISQUERYAGAIN] = $this->QUERYAGAIN;
             }else
             {
@@ -185,6 +210,7 @@ class SynoFileHosting
                 {
                     $page = $this->UrlFileFree($this->Url);
                 }
+                $this->DebugMessage("PAGE_GENERATE_FREE_: ".$page);
                 
                 if($page != false)
                 {
@@ -192,6 +218,7 @@ class SynoFileHosting
                     if(!empty($realUrl[1]))
                     {
                         $DownloadInfo[DOWNLOAD_URL] = $realUrl[1];
+                        $this->DebugMessage("URL_FREE: ".$realUrl[1]);
                         //$DownloadInfo[DOWNLOAD_ISPARALLELDOWNLOAD] = false;
                         $URLFinded = true;
                     }
@@ -200,6 +227,7 @@ class SynoFileHosting
                 if($URLFinded == false)
                 {
                     $DownloadInfo[DOWNLOAD_COUNT] = $this->WAITING_TIME_DEFAULT;
+                    $this->DebugMessage("WAITING_DEFAULT_TIME: ".$this->WAITING_TIME_DEFAULT);
                     $DownloadInfo[DOWNLOAD_ISQUERYAGAIN] = $this->QUERYAGAIN;
                 }
             }
@@ -262,7 +290,8 @@ class SynoFileHosting
         
         $url = $this->Url.'&auth=1&e=1';
         
-        $data = array('submit'=>'Download');
+        $data = array('submit'=>'download');
+                     
         $option = array(CURL_OPTION_POSTDATA => $data, 
                         CURL_OPTION_HEADER => true,
                         CURL_OPTION_FOLLOWLOCATION =>false);
@@ -276,6 +305,14 @@ class SynoFileHosting
         return $ret;
     }
     
+    private function GenerateRequest($page)
+    {
+        preg_match($this->ADZONE_REGEX, $page, $adzonematch);
+         if(isset($adzonematch[1]))
+         {
+            $this->ADZONE_VALUE = $adzonematch[1];
+         }
+    }
     
      //Retourne la page après avoir cliqué sur le bouton et s'etre authentifié en gratuit
     private function UrlFileWithFreeAccount()
@@ -283,7 +320,9 @@ class SynoFileHosting
         $ret = false;
         $url = $this->Url.'&auth=1';
         
-        $data = array('submit'=>'Download');
+        $data = array('submit'=>'Access to download',
+                     'adzone'=>$this->ADZONE_VALUE);
+                     
         $option = array(CURL_OPTION_POSTDATA => $data, 
                         CURL_OPTION_FOLLOWLOCATION =>false);
                        
@@ -300,7 +339,8 @@ class SynoFileHosting
     private function UrlFileFree($strUrl)
     {
        $ret = false;
-       $data = array('submit'=>'Download');
+       $data = array('submit'=>'Access to download',
+                     'adzone'=>$this->ADZONE_VALUE);
        
        $option = array(CURL_OPTION_POSTDATA => $data, 
                        CURL_OPTION_HEADER => false);
@@ -416,6 +456,18 @@ class SynoFileHosting
     private function StartsWith($Haystack, $Needle)
     {
         return strpos($Haystack, $Needle) === 0;
+    }
+    
+    //ecrit un message dans un fichier afin de debug le programme
+    private function DebugMessage($texte)
+    {
+        If($this->ENABLE_DEBUG == TRUE)
+        {
+            $myfile = fopen($this->LOG_FILE, "a");
+            fwrite($myfile,$texte);
+            fwrite($myfile,"\n\n");
+            fclose($myfile);
+        }
     }
 }
 ?>
