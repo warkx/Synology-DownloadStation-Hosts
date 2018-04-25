@@ -3,8 +3,8 @@
 /*Auteur : warkx
   Partie premium developpé par : Einsteinium
   Aidé par : Polo.Q, Samzor
-  Version : 1.6.3
-  Développé le : 27/02/2018
+  Version : 1.6.4
+  Développé le : 25/04/2018
   Description : Support du compte gratuit et premium*/
   
   
@@ -36,6 +36,7 @@ class SynoFileHosting
     private $ACCOUNT_TYPE_REGEX = '/Premium\s*member/i';
     private $ERROR_404_URL_REGEX = '/uptobox.com\/404.html/i';
     private $DEBUG_REGEX = '/(https?:\/\/uptobox\.com\/.+)\/debug/i';
+    private $ORIGINAL_URL_REGEX = '/https?:\/\/(uptobox\.com\/.+)/i';
     
     private $STRING_COUNT = 'count';
     private $STRING_FNAME = 'fname';
@@ -60,6 +61,7 @@ class SynoFileHosting
         {
             $this->Url = $Url;
         }
+        $this->MakeUrl();
         $this->DebugMessage("URL: ".$this->Url);
     }
   
@@ -403,6 +405,7 @@ class SynoFileHosting
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_USERAGENT, DOWNLOAD_STATION_USER_AGENT);
 		curl_setopt($curl, CURLOPT_URL, $this->Url);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE); 
 		curl_setopt($curl, CURLOPT_COOKIEFILE, $this->COOKIE_FILE);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); 
 		curl_setopt($curl, CURLOPT_HEADER, true);
@@ -437,6 +440,17 @@ class SynoFileHosting
             fwrite($myfile,$texte);
             fwrite($myfile,"\n\n");
             fclose($myfile);
+        }
+    }
+    
+        /*créé une URL propre qui permettra de l'utiliser correctement
+    */
+    private function MakeUrl()
+    { 
+       preg_match($this->ORIGINAL_URL_REGEX, $this->Url, $originalurlmatch);
+        if(!empty($originalurlmatch[1]))
+        {
+            $this->Url = "https://".$originalurlmatch[1];
         }
     }
 }
