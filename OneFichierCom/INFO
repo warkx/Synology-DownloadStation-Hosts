@@ -2,9 +2,9 @@
 "name": "OneFichierCom", 
 "hostprefix": "1fichier.com", 
 "displayname": "1fichier", 
-"version": "2.9", 
+"version": "3.0", 
 "authentication": "yes", 
 "module": "OneFichierCom.php", 
 "class": "SynoFileHosting", 
-"description": "Free or premium account" 
+"description": "Free, CDN, Access or premium account" 
 } 
