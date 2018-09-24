@@ -3,8 +3,8 @@
 /*
 	Auteur : warkx
 	Version originale Developpé le : 23/11/2013
-	Version : 3.0 (modifié par Sanyika(astark01))
-	Développé le : 12/09/2018
+	Version : 3.1 (modifié par Sanyika(astark01))
+	Développé le : 25/09/2018
 	Description : Support du compte gratuit, access, premium et CDN
  */
 
@@ -44,6 +44,9 @@ class SynoFileHosting
     private $QUERYAGAIN = 1;
 	
 	private $MIN_CDN_GB = 5;
+	private $CDN_FR_REGEX='`Votre compte a ([0-9.]+) Go`i';
+    private $CDN_EN_REGEX='`Your account have ([0-9.]+) GB`i';
+	private $CDN_CHECKBOX_REGEX='<input type="checkbox" checked="checked" name="own_credit">';
     
     public function __construct($Url, $Username, $Password, $HostInfo)
     {
@@ -454,6 +457,8 @@ class SynoFileHosting
         $this->DebugMessage("DEBUG TypeAccount function");
 		
 		$ret = LOGIN_FAIL;
+		
+		$postData=array('mail'=>$Username,'pass'=>$Password,'lt'=>'on','purge'=>'on','valider'=>'Envoyer');
         
         //Generation d'un cookie à la première connexion$cookiepath
         if (strpos(PHP_OS, "WINNT") === false)
@@ -465,8 +470,8 @@ class SynoFileHosting
             $cookiepath = $this->COOKIE_PATH_WINNT;
         }
         
-        $option = array(CURL_OPTION_COOKIE => TRUE, CURL_OPTION_SAVECOOKIEFILE => $cookiepath);
-        $queryUrl = 'https://1fichier.com/login.pl?mail='.$Username.'&pass='.$Password;
+        $option = array(CURL_OPTION_COOKIE => TRUE, CURL_OPTION_SAVECOOKIEFILE => $cookiepath, CURL_OPTION_POSTDATA=>$postData);
+        $queryUrl = 'https://1fichier.com/login.pl';
         $page = $this->DownloadPage($queryUrl,$option);
         
         $this->DebugMessage("DEBUG TypeAccount LoginURL: ".$queryUrl);
@@ -598,11 +603,6 @@ class SynoFileHosting
 	//Fonction pour detecter si le compte possede des CDN
 	private function HaveCDN()
 	{
-		$HIGHT_FR="Votre compte a ";
-		$LOW_FR=" Go ";
-		$HIGHT_EN="Your account have ";
-		$LOW_EN=" GB ";
-		
 		$this->DebugMessage("DEBUG HaveCDN function");
 		
 		$creditCDN=0;
@@ -622,24 +622,27 @@ class SynoFileHosting
         
         $this->DebugMessage("DEBUG HaveCDN LoginURL: ".$queryUrl);
         $this->DebugMessage("DEBUG HaveCDN IndexHTML: ".$page);
-        
-		if (strpos($page,$HIGHT_FR)>0) //Conf en francais
+		
+		//Obtient la quantité de CDN
+        preg_match($this->CDN_FR_REGEX, $page, $stringArrayFRCreditCDN);
+        preg_match($this->CDN_EN_REGEX, $page, $stringArrayENCreditCDN);
+		if(!empty($stringArrayFRCreditCDN[1]))
 		{
-			$hightPos=strpos($page,$HIGHT_FR);
-			$lowPos=strpos($page,$LOW_FR);
-			$creditCDN=floatval(substr($page,$hightPos+strlen($HIGHT_FR),$lowPos-$hightPos-strlen($HIGHT_FR)));
+			$creditCDN=floatval($stringArrayFRCreditCDN[1]);
 		}
-		else if (strpos($page,$HIGHT_FR)>0) //Conf en francais
+		else if(!empty($stringArrayENCreditCDN[1]))
 		{
-			$hightPos=strpos($page,$HIGHT_FR);
-			$lowPos=strpos($page,$LOW_FR);
-			$creditCDN=floatval(substr($page,$hightPos+strlen($HIGHT_FR),$lowPos-$hightPos-strlen($HIGHT_FR)));
+			$creditCDN=floatval($stringArrayENCreditCDN[1]);
 		}
 		
 		$this->DebugMessage("DEBUG HaveCDN CDN credit : ".$creditCDN);
 		
+		//Verifie si la case des CDN est coché
+		$checkedCdnBox=preg_match($this->CDN_CHECKBOX_REGEX,$page);
+		if($checkedCdnBox) $this->DebugMessage("DEBUG CDN Checkbox is checked");
+		else $this->DebugMessage("DEBUG CDN Checkbox is NOT checked");
 		
-		if($creditCDN>=$MIN_CDN_GB) return TRUE;
+		if(($creditCDN>=$MIN_CDN_GB)&&$checkedCdnBox) return TRUE;
 		else return FALSE;
 		
 	}
