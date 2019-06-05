@@ -3,8 +3,8 @@
 /*
 	Auteur : warkx
 	Version originale Developpé le : 23/11/2013
-	Version : 3.1 (modifié par Sanyika(astark01))
-	Développé le : 25/09/2018
+	Version : 3.2 (modifié par Babasss)
+	Développé le : 05/06/2019
 	Description : Support du compte gratuit, access, premium et CDN
  */
 
@@ -289,7 +289,7 @@ class SynoFileHosting
 		$this->DebugMessage("DEBUG DownloadPage function");
         $this->DebugMessage("DEBUG DownloadPage URL: ".$strUrl);
         
-        $option = array(CURL_OPTION_FOLLOWLOCATION => TRUE);
+        $option = array('CURL_OPTION_FOLLOWLOCATION' => TRUE);
         
         $ret = false;
         
@@ -298,12 +298,13 @@ class SynoFileHosting
             $option = array_merge ($option, $inputoption);
         }
         
-        $curl = GenerateCurl($strUrl,$option);
+        $curl = $this->GenerateCurl($strUrl,$option);
+		// die('echec : '.$curl);
         $ret = curl_exec($curl);
         curl_close($curl);
         
-        $this->DebugMessage("DEBUG DownloadPage HTML: ".$ret);
-        
+        $this->DebugMessage("DEBUG DownloadPage HTML: " . $ret);
+        // die('echec : '.$ret);
         return $ret;
     }
     
@@ -324,8 +325,8 @@ class SynoFileHosting
             $url = $url.'&e=1';
         }
         
-        $option = array(CURL_OPTION_FOLLOWLOCATION =>false);
-        $curl = GenerateCurl($url,$option);
+        $option = array('CURL_OPTION_FOLLOWLOCATION' =>false);
+        $curl = $this->GenerateCurl($url,$option);
         curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
         curl_setopt($curl, CURLOPT_USERPWD, $this->Username.':'.$this->Password);
         $ret = curl_exec($curl);
@@ -349,11 +350,11 @@ class SynoFileHosting
         
         $data = array('submit'=>'download');
         
-        $option = array(CURL_OPTION_POSTDATA => $data,
-            CURL_OPTION_HEADER => TRUE,
-            CURL_OPTION_FOLLOWLOCATION =>false);
+        $option = array('CURL_OPTION_POSTDATA' => $data,
+            'CURL_OPTION_HEADER' => TRUE,
+            'CURL_OPTION_FOLLOWLOCATION' =>false);
         
-        $curl = GenerateCurl($url,$option);
+        $curl = $this->GenerateCurl($url,$option);
         curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
         curl_setopt($curl, CURLOPT_USERPWD, $this->Username.':'.$this->Password);
         $ret = curl_exec($curl);
@@ -388,10 +389,10 @@ class SynoFileHosting
         $data = array('submit'=>'Access to download',
             'adzone'=>$this->ADZONE_VALUE);
         
-        $option = array(CURL_OPTION_POSTDATA => $data,
-            CURL_OPTION_FOLLOWLOCATION =>false);
+        $option = array('CURL_OPTION_POSTDATA' => $data,
+            'CURL_OPTION_FOLLOWLOCATION' =>false);
         
-        $curl = GenerateCurl($url,$option);
+        $curl = $this->GenerateCurl($url,$option);
         curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
         curl_setopt($curl, CURLOPT_USERPWD, $this->Username.':'.$this->Password);
         $ret = curl_exec($curl);
@@ -413,10 +414,10 @@ class SynoFileHosting
         $data = array('submit'=>'Access to download',
             'adzone'=>$this->ADZONE_VALUE);
         
-        $option = array(CURL_OPTION_POSTDATA => $data,
-            CURL_OPTION_HEADER => false);
+        $option = array('CURL_OPTION_POSTDATA' => $data,
+            'CURL_OPTION_HEADER' => false);
         
-        $curl = GenerateCurl($strUrl,$option);
+        $curl = $this->GenerateCurl($strUrl,$option);
         $ret = curl_exec($curl);
         curl_close($curl);
         
@@ -435,8 +436,8 @@ class SynoFileHosting
         
         $this->DebugMessage("DEBUG CheckLink URL: ".$strUrl);
         
-        $option = array(CURL_OPTION_POSTDATA => $data);
-        $curl = GenerateCurl($this->CHECKLINK_URL_REQ,$option);
+        $option = array('CURL_OPTION_POSTDATA' => $data);
+        $curl = $this->GenerateCurl($this->CHECKLINK_URL_REQ,$option);
         $page = curl_exec($curl);
         curl_close($curl);
         
@@ -470,7 +471,7 @@ class SynoFileHosting
             $cookiepath = $this->COOKIE_PATH_WINNT;
         }
         
-        $option = array(CURL_OPTION_COOKIE => TRUE, CURL_OPTION_SAVECOOKIEFILE => $cookiepath, CURL_OPTION_POSTDATA=>$postData);
+        $option = array('CURL_OPTION_COOKIE' => TRUE, 'CURL_OPTION_SAVECOOKIEFILE' => $cookiepath, 'CURL_OPTION_POSTDATA'=>$postData);
         $queryUrl = 'https://1fichier.com/login.pl';
         $page = $this->DownloadPage($queryUrl,$option);
         
@@ -485,7 +486,7 @@ class SynoFileHosting
         if($pos > 0)
         {
             
-            $option = array(CURL_OPTION_COOKIE => TRUE, CURL_OPTION_LOADCOOKIEFILE => $cookiepath);
+            $option = array('CURL_OPTION_COOKIE' => TRUE, 'CURL_OPTION_LOADCOOKIEFILE' => $cookiepath);
             $queryUrl = 'https://1fichier.com/console/index.pl';
             $page = $this->DownloadPage($queryUrl, $option);
             
@@ -616,7 +617,7 @@ class SynoFileHosting
             $cookiepath = $this->COOKIE_PATH_WINNT;
         }
         
-        $option = array(CURL_OPTION_COOKIE => TRUE, CURL_OPTION_LOADCOOKIEFILE => $cookiepath);
+        $option = array('CURL_OPTION_COOKIE' => TRUE, 'CURL_OPTION_LOADCOOKIEFILE' => $cookiepath);
         $queryUrl = 'https://1fichier.com/console/params.pl';
         $page = $this->DownloadPage($queryUrl,$option);
         
@@ -646,6 +647,44 @@ class SynoFileHosting
 		else return FALSE;
 		
 	}
+
+	public function GenerateCurl($Url, $Option=NULL)
+	{
+		$ret = FALSE;
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+		curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, DOWNLOAD_TIMEOUT);
+		curl_setopt($curl, CURLOPT_TIMEOUT, DOWNLOAD_TIMEOUT);
+		curl_setopt($curl, CURLOPT_USERAGENT, DOWNLOAD_STATION_USER_AGENT);
+		if (NULL != $Option) {
+			if (!empty($Option['CURL_OPTION_POSTDATA'])) {
+				$PostData = http_build_query($Option['CURL_OPTION_POSTDATA']);
+				curl_setopt($curl, CURLOPT_POST, TRUE);
+				curl_setopt($curl, CURLOPT_POSTFIELDS, $PostData);
+			}
+			if (!empty($Option['CURL_OPTION_COOKIE'])) {
+				curl_setopt($curl, CURLOPT_COOKIE, $Option['CURL_OPTION_COOKIE']);
+			}
+			if (!empty($Option['CURL_OPTION_HTTPHEADER'])) {
+				curl_setopt($curl, CURLOPT_HTTPHEADER, $Option['CURL_OPTION_HTTPHEADER']);
+			}
+			if (!empty($Option['CURL_OPTION_SAVECOOKIEFILE'])) {
+				curl_setopt($curl, CURLOPT_COOKIEJAR, $Option['CURL_OPTION_SAVECOOKIEFILE']);
+			}
+			if (!empty($Option['CURL_OPTION_LOADCOOKIEFILE'])) {
+				curl_setopt($curl, CURLOPT_COOKIEFILE, $Option['CURL_OPTION_LOADCOOKIEFILE']);
+			}
+			if (!empty($Option['CURL_OPTION_FOLLOWLOCATION']) && TRUE == $Option['CURL_OPTION_FOLLOWLOCATION']) {
+				curl_setopt($curl, CURLOPT_FOLLOWLOCATION, TRUE);
+			}
+			if (!empty($Option['CURL_OPTION_HEADER'])&& TRUE == $Option['CURL_OPTION_HEADER']) {
+				curl_setopt($curl, CURLOPT_HEADER, TRUE);
+			}
+		}
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
+		curl_setopt($curl, CURLOPT_URL, $Url);
+		$ret = $curl;
+		return $ret;
+	}
 }
 ?>
- 
