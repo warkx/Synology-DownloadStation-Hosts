@@ -3,8 +3,8 @@
 /*
 	Auteur : warkx
 	Version originale Developpé le : 23/11/2013
-	Version : 3.2.4 (modifié par Babasss)
-	Développé le : 13/06/2019
+	Version : 3.2.5 (modifié par Babasss)
+	Développé le : 07/07/2019
 	Description : Support du compte gratuit, access, premium et CDN
 	
 	Packaging by => tar zcf "OneFichierCom_X.host" INFO OneFichierCom.php
@@ -24,7 +24,10 @@ class SynoFileHosting
     
     private $ENABLE_DEBUG = TRUE;
     private $ENABLE_DEBUG_HTML = FALSE;
-    private $LOG_FILE = '/tmp/1fichier.log';
+	private $ENABLE_DEBUGCURL_VERBOSE = FALSE;
+    private $LOG_DIR = '/tmp/';
+    private $LOG_DIR_HTML = '1fichier_log/';
+    private $LOG_FILE = '1fichier.log';
     private $LOG_FILE_WINNT = 'C:\intel\1fichier.log';
     
     private $COOKIE_PATH = '/tmp/1fichier.cookie';
@@ -97,8 +100,10 @@ class SynoFileHosting
             /*verifie si le lien est valide, si c'est le cas
              le nom du fichier est récupéré, sinon c'est false
              */
+			 
             $LinkInfo = $this->CheckLink($this->ORIGINAL_URL);
             
+			$this->DebugMessage("DEBUG Original URL LinkInfo", $this->ORIGINAL_URL);
 			$this->DebugMessage("DEBUG GetDownloadInfo LinkInfo", $this->coalesce_string($LinkInfo));
 			
             //Renvoie que le fichier n'existe pas si le lien est obsolète
@@ -124,7 +129,8 @@ class SynoFileHosting
                  */
                 if($ret != false)
                 {
-                    $ret[DOWNLOAD_FILENAME] = $LinkInfo;
+					#### Quand on un fichier en mode private, on arrive pas à récupérer son nom, ici on corrige si en Premium, on obtient un nom de fichier
+                    if ( isset($ret[INFO_NAME])) { $ret[DOWNLOAD_FILENAME] = $ret[INFO_NAME]; } else { $ret[DOWNLOAD_FILENAME] = $LinkInfo; }
                     $ret[INFO_NAME] = trim($this->HostInfo[INFO_NAME]);
                 }else
                 {
@@ -182,6 +188,8 @@ class SynoFileHosting
             
             preg_match($this->PREMIUM_REAL_URL_REGEX,$realUrl,$urlmatch);
             
+			$DownloadInfo[INFO_NAME] = $result[1];
+			
             if(!empty($urlmatch[0]))
             {
                 $DownloadInfo[DOWNLOAD_URL] = $realUrl;
@@ -457,13 +465,16 @@ class SynoFileHosting
         $curl = $this->GenerateCurl($this->CHECKLINK_URL_REQ,$option);
         $page = curl_exec($curl);
 		$ret_curl = $this->debug_curl($curl);
+		
         curl_close($curl);
+		
+		$this->DebugMessage("DEBUG Checklink HTML", $page);
         
         preg_match($this->FILE_OFFLINE_REGEX, $page, $errormatch);
         if(!isset($errormatch[0]))
         {
             $result = explode(';', $page);
-            $ret = $result[1];
+            if ( trim($result[3]) == 'PRIVATE' ) { $ret = 'Private file'; } else { $ret = $result[1]; }
         }
         
         $this->DebugMessage("DEBUG CheckLink FileName", $this->coalesce_string($ret));
@@ -598,10 +609,12 @@ class SynoFileHosting
         {
             
             $pos = strpos($texte, "HTML");
-              
+            
+			$now = DateTime::createFromFormat('U.u', microtime(true));
+
             if (strpos(PHP_OS, "WINNT") === false)
             {
-                $logfile = $this->LOG_FILE;
+                $logfile = $this->LOG_DIR . $this->LOG_FILE;
             }
             else 
             {
@@ -610,13 +623,20 @@ class SynoFileHosting
             
 			if ( !empty($data) ) $texte = $texte ." : ";
 			
-            if ($pos === false || $this->ENABLE_DEBUG_HTML == true)
-            {
-				$data = $data;
-            } elseif ( !empty($data) ) { $data = 'Contenu HTML'; }
+			if ( $this->ENABLE_DEBUG_HTML == true )
+			{
+				if ( strlen($data) > 100 )
+				{
+					$myfile_html = fopen($this->LOG_DIR . $this->LOG_DIR_HTML . date_format($now,'Y-m-d-H-i-s-u') .'.html', "a");
+					fwrite($myfile_html, $data);
+					fclose($myfile_html);
+					$data = 'Contenu HTML'; 
+				}
+			}
+			elseif ($pos === false ) { $data = $data; } 
+			elseif ( !empty($data) ) { $data = 'Contenu HTML'; }
 			else { $data = 'Aucun contenu'; }
 			
-			$now = DateTime::createFromFormat('U.u', microtime(true));
 			$myfile = fopen($logfile, "a");
 			fwrite($myfile, $now->format('Y-m-d H:i:s.u') ." | ". $texte . $data);
 			fwrite($myfile,"\n");
@@ -678,7 +698,7 @@ class SynoFileHosting
 		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
 		curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, DOWNLOAD_TIMEOUT);
 		curl_setopt($curl, CURLOPT_TIMEOUT, DOWNLOAD_TIMEOUT);
-		curl_setopt($curl, CURLOPT_USERAGENT, DOWNLOAD_STATION_USER_AGENT);
+		// curl_setopt($curl, CURLOPT_USERAGENT, DOWNLOAD_STATION_USER_AGENT);
 		if (NULL != $Option) {
 			if (!empty($Option['CURL_OPTION_POSTDATA'])) {
 				$PostData = http_build_query($Option['CURL_OPTION_POSTDATA']);
@@ -703,9 +723,11 @@ class SynoFileHosting
 			if (!empty($Option['CURL_OPTION_HEADER'])&& TRUE == $Option['CURL_OPTION_HEADER']) {
 				curl_setopt($curl, CURLOPT_HEADER, TRUE);
 			}
+			if ( $this->ENABLE_DEBUGCURL_VERBOSE == TRUE ) { curl_setopt($curl, CURLOPT_VERBOSE, TRUE); }
 		}
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
 		curl_setopt($curl, CURLOPT_URL, $Url);
+		// curl_setopt($curl, CURLINFO_HEADER_OUT, TRUE);
 		$ret = $curl;
 		return $ret;
 	}
