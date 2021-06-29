@@ -3,7 +3,7 @@
 /*
 	Auteur : warkx
 	Version originale Developpé le : 23/11/2013
-	Version : 3.2.5 (modifié par Babasss)
+	Version : 3.2.6 (modifié par DQ)
 	Développé le : 07/07/2019
 	Description : Support du compte gratuit, access, premium et CDN
 	
@@ -39,7 +39,7 @@ class SynoFileHosting
     private $FILEID_OLD_REGEX = '`https?:\/\/([a-z0-9A-Z]+)\.1fichier\.com\/?`i';
     private $FILE_OFFLINE_REGEX = '`BAD LINK|NOT FOUND`i';
     private $DOWNLOAD_WAIT_REGEX = '`You must wait (\d+) minutes`i';
-    private $PREMIUM_REAL_URL_REGEX = '`https?:\/\/[a-z0-9]+-[a-z0-9]+\.1fichier\.com\/[a-z0-9]+`i';
+    private $PREMIUM_REAL_URL_REGEX = '`https?:\/\/[a-z0-9]+-[a-z0-9]+(?:-[a-z0-9]+)?\.1fichier\.com\/[a-z0-9]+`i';
     private $FREE_REAL_URL_REGEX = '`href=\"(https?:\/\/[a-z0-9]+-[a-z0-9]+\.1fichier\.com\/[a-z0-9]+)\"?`i';
     private $DEBUG_REGEX = '/(https?:\/\/1fichier\.com\/.+)\/debug/i';
     // private $ADZONE_REGEX = '`name="adzone" value="(.+?)"`i';
@@ -183,6 +183,7 @@ class SynoFileHosting
             /*Divise le résultat de la page pour recuperer la vrai URL.
              s'il n'est pas trouvé, renvoie ERREUR
              */
+            $this->DebugMessage("DEBUG DownloadPremium result", $page); 
             $result = explode(';', $page);
             $realUrl = $result[0];
             
